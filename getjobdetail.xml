@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+    <flow name="getjobdetailFlow">
+        <set-variable variableName="OriginalPayload1" value="#[payload:java.lang.String]" doc:name="OriginalPayload1"/>
+        <logger level="INFO" doc:name="Logger" message="Inside getjobdetailFlow flow==#[message.payloadAs(java.lang.String)]"/>
+        <set-variable variableName="jobId" value="#[xpath3('//*:jobId',payload,'STRING')]" doc:name="jobId"/>
+        <choice doc:name="Choice">
+            <when expression="#[flowVars['jobId'] !=null &amp;&amp; flowVars['jobId'] !=&quot;&quot;]">
+                <logger message="Validation success===#[payload]" level="INFO" doc:name="Logger"/>
+                <flow-ref name="OAuthSignatureFlow1" doc:name="OAuthSignatureFlow1"/>
+            </when>
+            <otherwise>
+                <scripting:component doc:name="Groovy">
+                    <scripting:script engine="Groovy"><![CDATA[if(flowVars.jobId==null || flowVars.jobId==""){
+throw new directlinegroup.integration.mule.DLGAPIException("5555","error","jobId can not be empty","soap:Server","High");
+}]]></scripting:script>
+                </scripting:component>
+            </otherwise>
+        </choice>
+    </flow>
+ <sub-flow name="OAuthSignatureFlow1">
+        <logger message="Inside Oauth flow==#[payload:java.lang.String]" level="INFO" doc:name="Logger"/>
+        <component class="directlinegroup.integration.mule.ONEAPIRestClient" doc:name="Java"/>
+        <logger message="after java class payload is =====#[payload:java.lang.String]" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="Authorization" value="OAuth realm=#[payload.get(&quot;url&quot;)],oauth_consumerkey=${esb.smartcomm.consumerKey},oauth_nonce=#[payload.get(&quot;nonce&quot;)],oauth_signature=#[payload.get(&quot;signature&quot;)],oauth_signature_method=HMAC-SHA256,oauth_timestamp=#[payload.get(&quot;nonce_unixTime&quot;)],oauth_version=1.0" doc:name="Authorization"/>
+        <logger message="Authorization value is ====#[flowVars.Authorization]" level="INFO" doc:name="Logger"/>
+        <flow-ref name="SmartCommFlow1" doc:name="SmartCommFlow1"/>
+    </sub-flow> 
+    <sub-flow name="SmartCommFlow1">
+        <logger message="Inside Smartcomm flow===#[payload:java.lang.String]" level="INFO" doc:name="Logger"/>
+        <logger message="Http connector needs to be placed" level="INFO" doc:name="Http connector needs to be placed"/>
+        <set-payload value="{
+  &quot;queue&quot; : &quot;AndrewsQueue&quot;,
+  &quot;input&quot; : &quot;/mnt/autofs/input/bank-data-1-trans-fatal.xml&quot;,
+  &quot;progress&quot; : &quot;2&quot;,
+  &quot;project&quot; : 157673530,
+  &quot;type&quot; : &quot;TRANSACTION_FILE&quot;,
+  &quot;id&quot; : 143,
+  &quot;config&quot; : 157811929,
+  &quot;range&quot; : null,
+  &quot;status&quot; : &quot;FINISHED&quot;,
+  &quot;inputData&quot; : null,
+  &quot;configData&quot; : null,
+  &quot;appliance&quot; : &quot;AndrewsAppliance_08-00-27-92-C2-80&quot;,
+  &quot;purgeLocked&quot; : false,
+  &quot;testStatus&quot; : null,
+  &quot;submitted&quot; : &quot;2018-05-31T15:35:22.557Z&quot;,
+  &quot;started&quot; : &quot;2018-05-31T15:35:25.99Z&quot;,
+  &quot;finished&quot; : &quot;2018-05-31T15:41:01.863Z&quot;,
+  &quot;jobFiles&quot; : [ {
+    &quot;contentType&quot; : &quot;text/plain&quot;,
+    &quot;jobFileId&quot; : 296955785,
+    &quot;jobId&quot; : 143,
+    &quot;fileType&quot; : &quot;CONSOLE&quot;,
+    &quot;filePath&quot; : &quot;/mnt/autofs/logs/Diagnostics/2018-05-31T15_13_45Z.0.console.log&quot;
+  }, {
+    &quot;contentType&quot; : &quot;text/plain&quot;,
+    &quot;jobFileId&quot; : 296955789,
+    &quot;jobId&quot; : 143,
+    &quot;fileType&quot; : &quot;MESSAGES&quot;,
+    &quot;filePath&quot; : &quot;/mnt/autofs/logs/0-4999/143.log&quot;
+  }, {
+    &quot;contentType&quot; : &quot;text/plain&quot;,
+    &quot;jobFileId&quot; : 296955794,
+    &quot;jobId&quot; : 143,
+    &quot;fileType&quot; : &quot;TRANSACTION_REPORT&quot;,
+    &quot;filePath&quot; : &quot;/mnt/autofs/logs/Transaction_report_143.csv&quot;
+  } ],
+  &quot;jobProperties&quot; : null,
+  &quot;name&quot; : &quot;Test Job&quot;
+}" doc:name="Set Payload"/>
+        <dw:transform-message doc:name="Transform Message" metadata:id="cdbbdbbd-0d71-4672-9c6a-28d1295a2e29">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:input-variable mimeType="application/json" variableName="Authorization"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 http://directlinegroup.co.uk/schemas/custdocs/custdocsesb/businessentity/1/0
+---
+{
+	ns0#GetJobDetailResponse: {
+		ns0#response: {
+			ns0#queue: payload.queue,
+			ns0#input: payload.input,
+			ns0#progress: payload.progress,
+			ns0#project: payload.project as :string,
+			ns0#type: payload.type,
+			ns0#id: payload.id as :string,
+			ns0#config: payload.config as :string,
+			ns0#range: payload.range,
+			ns0#status: payload.status,
+			ns0#inputData: payload.inputData,
+			ns0#configData: payload.configData,
+			ns0#appliance: payload.appliance,
+			ns0#purgeLocked: payload.purgeLocked as :string,
+			ns0#testStatus: payload.testStatus,
+			ns0#submitted: payload.submitted,
+			ns0#started: payload.started,
+			ns0#finished: payload.finished,
+			ns0#jobFiles: {
+				ns0#contentType: payload.jobFiles.contentType,
+				ns0#jobFileId: payload.jobFiles.jobFileId,
+				ns0#jobId: payload.jobFiles.jobId,
+				ns0#fileType: payload.jobFiles.fileType,
+				ns0#filePath: payload.jobFiles.filePath
+			},
+			ns0#jobProperties: payload.jobProperties,
+			ns0#name: payload.name
+		}
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="After Transform Message===#[payload:java.lang.String]" level="INFO" doc:name="Logger"/> 
+    </sub-flow>
+         
+</mule>

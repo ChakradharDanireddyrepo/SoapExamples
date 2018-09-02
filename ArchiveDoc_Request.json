@@ -1,0 +1,13 @@
+{
+  "request.docid" : ["abc123"],
+  "request.sourcesystem" : "Claim",
+  "request.channel" : "Email",
+  "request.automated" : true,
+  "main.outputpath" : "/mnt/autofs/output/claims/20180421/abc123.eml",
+  "copy.outputpath" : ["/mnt/autofs/output/claims/20180421/abc123.pdf"],
+  "notification.doc" : "copy",
+  "notification.status" : "SUCCESS",
+  "sc.jobid" : 401,
+  "sc.transactionid" : 1,
+  "sc.envelopeid" : 2
+}
